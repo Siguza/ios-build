@@ -15,29 +15,27 @@ if [ -z "$GXX" ]; then
 fi;
 GXXFLAGS=('-std=c++11' '-Wall' '-O3' '-flto' '-DSUPPORT_ARCH_arm64e=1' '-DSUPPORT_ARCH_arm64_32=1' "-I${out}/inc" "-I${in}" "-I${in}/../include" "-I${in}/../dyld3" "-I${in}/../dyld3/shared-cache" "-I${in}/../interlinked-dylibs");
 
-"$GXX" "${GXXFLAGS[@]}" -o "$out/dsc_extractor" "$in/dsc_extractor.cpp" "$in/dsc_iterator.cpp" -xobjective-c++ -- - <<EOF
-#include <stdint.h>
+found=false;
+data='#include <string.h>';
+while read -r; do
+    if egrep -q '^\s*map\[dylibInfo->path\]\.push_back\(seg_info\(segInfo->name, segInfo->fileOffset, segInfo->fileSize\)\);$' <<<"$REPLY"; then
+        found=true;
+        data+='extern const char *siguza_filter;'$'\n';
+        data+='if(!siguza_filter || strstr(dylibInfo->path, siguza_filter))'$'\n';
+    fi;
+    data+="$REPLY"$'\n';
+done < "$in/dsc_extractor.cpp";
+if ! "$found"; then
+    echo 'Failed to find dsc_extractor block code';
+    exit 1;
+fi;
+
+"$GXX" "${GXXFLAGS[@]}" -Wl,-interposable -o "$out/dsc_extractor" "$in/dsc_iterator.cpp" -xobjective-c++ -- - <<EOF
+${data}
+
 #include <stdio.h>
-#include <string.h>
 
-#include "dsc_iterator.h"
-
-extern "C" int dyld_shared_cache_extract_dylibs_progress(const char*, const char*, void (^)(unsigned, unsigned));
-
-static const char *siguza_filter = NULL;
-
-static int siguza_iterate_proxy(const void *cache, uint32_t size, void (^callback)(const dyld_shared_cache_dylib_info* dylibInfo, const dyld_shared_cache_segment_info* segInfo))
-{
-    return dyld_shared_cache_iterate(cache, size, ^(const dyld_shared_cache_dylib_info* dylibInfo, const dyld_shared_cache_segment_info* segInfo) {
-        if(!siguza_filter || strstr(dylibInfo->path, siguza_filter))
-        {
-            callback(dylibInfo, segInfo);
-        }
-    });
-}
-
-__attribute__((used)) static struct { const void* replacment; const void* replacee; } _interpose_dyld_shared_cache_iterate
-__attribute__((section ("__DATA,__interpose"))) = { (const void*)&siguza_iterate_proxy, (const void*)&dyld_shared_cache_iterate };
+const char *siguza_filter = NULL;
 
 int main(int argc, const char **argv)
 {
@@ -58,9 +56,9 @@ EOF
 
 found=false;
 data='';
-while read -r line; do
-    data+="$line"$'\n';
-    if [ "$line" == 'else if ( options.mode == modeExtract ) {' ]; then
+while read -r; do
+    data+="$REPLY"$'\n';
+    if egrep -q '^\s*else if \( options\.mode == modeExtract \) \{$' <<<"$REPLY"; then
         found=true;
         data+='return dyld_shared_cache_extract_dylibs(sharedCachePath, options.extractionDir); } else if(0) {'$'\n';
     fi;
@@ -78,4 +76,5 @@ for f in 'Diagnostics.cpp' 'MachOFile.cpp' 'MachOLoaded.cpp' "shared-cache/DyldS
 done;
 "$GXX" "${GXXFLAGS[@]}" -o "$out/dsc_util" "$in/dsc_extractor.cpp" "$in/dsc_iterator.cpp" "${files[@]}" -xobjective-c++ -- - <<<"$data";
 
-echo 'Success';
+echo;
+echo '[*] Success';
