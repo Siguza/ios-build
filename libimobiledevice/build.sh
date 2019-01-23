@@ -83,7 +83,7 @@ urls=('https://github.com/libimobiledevice/libplist.git' \
 for x in "${urls[@]}"; do
     dir="$(basename "$x")";
     dir="${dir:0:${#dir}-4}";
-    if ![ -e "$dir" ]; then
+    if [ ! -d "$dir" ]; then
         git clone "$x";
     fi;
 done;
