@@ -30,6 +30,8 @@ else
             mkdir -p "$PWD-build";
             cd "$PWD-build";
             "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="-O3 -I$PREFIX/include" CXXFLAGS="-O3 -I$PREFIX/include" LDFLAGS="-L$PREFIX/lib";
+            make;
+            make install;
             cd "$dir";
             ;;
         'nettle')
@@ -37,6 +39,8 @@ else
             mkdir -p "$PWD-build";
             cd "$PWD-build";
             "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --enable-x86-aesni PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="-O3 -I$PREFIX/include" CXXFLAGS="-O3 -I$PREFIX/include" LDFLAGS="-L$PREFIX/lib";
+            make;
+            make install;
             cd "$dir";
             ;;
         'gnutls')
@@ -44,6 +48,8 @@ else
             mkdir -p "$PWD-build";
             cd "$PWD-build";
             "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --disable-nls --without-p11-kit --enable-openssl-compatibility PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="-O3 -I$PREFIX/include" CXXFLAGS="-O3 -I$PREFIX/include" LDFLAGS="-L$PREFIX/lib";
+            make;
+            make install;
             cd "$dir";
             ;;
         'libgpg-error')
@@ -51,6 +57,8 @@ else
             mkdir -p "$PWD-build";
             cd "$PWD-build";
             "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --disable-nls PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="-O3 -I$PREFIX/include" CXXFLAGS="-O3 -I$PREFIX/include" LDFLAGS="-L$PREFIX/lib";
+            make;
+            make install;
             cd "$dir";
             ;;
         'libtasn1'|'libgcrypt'|'libzip')
@@ -58,6 +66,8 @@ else
             mkdir -p "$PWD-build";
             cd "$PWD-build";
             "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="-O3 -I$PREFIX/include" CXXFLAGS="-O3 -I$PREFIX/include" LDFLAGS="-L$PREFIX/lib";
+            make;
+            make install;
             cd "$dir";
             ;;
         *)
@@ -83,7 +93,7 @@ urls=('https://github.com/libimobiledevice/libplist.git' \
 for x in "${urls[@]}"; do
     dir="$(basename "$x")";
     dir="${dir:0:${#dir}-4}";
-    if [ ! -d "$dir" ]; then
+    if ! [ -d "$dir" ]; then
         git clone "$x";
     fi;
 done;
