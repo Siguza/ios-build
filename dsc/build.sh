@@ -7,13 +7,16 @@ if [ $# -ne 1 ]; then
     exit 1;
 fi;
 
-in="$1/launch-cache";
+base="$1";
+in="$base/launch-cache";
 out="$(dirname "$0")";
 
 if [ -z "$GXX" ]; then
-    GXX=g++;
+    GXX=clang++;
 fi;
-GXXFLAGS=('-std=c++11' '-Wall' '-O3' '-flto' '-DSUPPORT_ARCH_arm64e=1' '-DSUPPORT_ARCH_arm64_32=1' "-I${out}/inc" "-I${in}" "-I${in}/../include" "-I${in}/../dyld3" "-I${in}/../dyld3/shared-cache" "-I${in}/../interlinked-dylibs");
+GXXFLAGS=('-std=c++11' '-Wall' '-O3' '-flto' '-DSUPPORT_ARCH_arm64e=1' '-DSUPPORT_ARCH_arm64_32=1' '-D__API_AVAILABLE_PLATFORM_bridgeos(x)=watchos,introduced=x' '-D__API_UNAVAILABLE_PLATFORM_bridgeos=bridgeos,unavailable' "-I${out}/inc" "-I${in}" "-I${in}/../include" "-I${in}/../dyld3" "-I${in}/../dyld3/shared-cache" "-I${in}/../interlinked-dylibs");
+
+printf "\x1b[1;95m===== dsc_extractor =====\x1b[0m\n";
 
 found=false;
 data='#include <string.h>';
@@ -30,7 +33,7 @@ if ! "$found"; then
     exit 1;
 fi;
 
-"$GXX" "${GXXFLAGS[@]}" -Wl,-interposable -o "$out/dsc_extractor" "$in/dsc_iterator.cpp" -xobjective-c++ -- - <<EOF
+"$GXX" "${GXXFLAGS[@]}" -Wl,-interposable -o "$out/dsc_extractor" "$in/dsc_iterator.cpp" -xobjective-c++ <(cat <<EOF
 ${data}
 
 #include <stdio.h>
@@ -53,6 +56,9 @@ int main(int argc, const char **argv)
     return r;
 }
 EOF
+);
+
+printf "\x1b[1;95m===== dsc_util =====\x1b[0m\n";
 
 found=false;
 data='';
@@ -74,7 +80,20 @@ for f in 'Diagnostics.cpp' 'MachOFile.cpp' 'MachOLoaded.cpp' "shared-cache/DyldS
         files+=("$f");
     fi;
 done;
-"$GXX" "${GXXFLAGS[@]}" -o "$out/dsc_util" "$in/dsc_extractor.cpp" "$in/dsc_iterator.cpp" "${files[@]}" -xobjective-c++ -- - <<<"$data";
+"$GXX" "${GXXFLAGS[@]}" -o "$out/dsc_util" "$in/dsc_extractor.cpp" "$in/dsc_iterator.cpp" "${files[@]}" -xobjective-c++ <(echo "$data");
+
+if [ -e "$base/dyld3/shared-cache/dyld_closure_util.cpp" ]; then
+    printf "\x1b[1;95m===== dsc_closure =====\x1b[0m\n";
+
+    files=();
+    for f in 'Closure.cpp' 'ClosureBuffer.cpp' 'ClosureBuilder.cpp' 'ClosureFileSystemPhysical.cpp' 'ClosurePrinter.cpp' 'ClosureWriter.cpp' 'Diagnostics.cpp' 'DyldCacheParser.cpp' 'LaunchCacheReader.cpp' 'LaunchCachePrinter.cpp' 'LaunchCacheWriter.cpp' 'MachOAnalyzer.cpp' 'MachOFile.cpp' 'MachOLoaded.cpp' 'MachOParser.cpp' 'PathOverrides.cpp' 'shared-cache/DyldSharedCache.cpp' 'shared-cache/FileUtils.cpp' 'shared-cache/ImageProxy.cpp'; do
+        f="${base}/dyld3/$f";
+        if [ -e "$f" ]; then
+            files+=("$f");
+        fi;
+    done;
+    "$GXX" "${GXXFLAGS[@]}" -o "$out/dsc_closure" "$base/dyld3/shared-cache/dyld_closure_util.cpp" "${files[@]}";
+fi;
 
 echo;
 echo '[*] Success';

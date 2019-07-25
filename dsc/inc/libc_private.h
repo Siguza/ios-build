@@ -1,5 +1,5 @@
-#ifndef UGH_LIBC_PRIVATE
-#define UGH_LIBC_PRIVATE
+#ifndef UGH_LIBC_PRIVATE_H
+#define UGH_LIBC_PRIVATE_H
 
 #ifdef __cplusplus
 extern "C"
