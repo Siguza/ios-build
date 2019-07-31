@@ -124,8 +124,10 @@ for target in "${targets[@]}"; do
     if [ "$target" == 'libimobiledevice' ]; then
         flags+=('--disable-openssl');
         ldflags+=('-lgpg-error');
+    elif [ "$target" == 'idevicerestore' ]; then
+        cflags+=('-Dmutex_destroy=idr_mutex_destroy' '-Dthread_new=idr_thread_new' '-Dmutex_init=idr_mutex_init' '-Dthread_join=idr_thread_join' '-Dmutex_unlock=idr_mutex_unlock' '-Dmutex_lock=idr_mutex_lock' '-Dthread_alive=idr_thread_alive' '-Dthread_free=idr_thread_free' '-Dthread_once=idr_thread_once');
     elif [ "$target" == 'ideviceinstaller' ]; then
-        cflags+=('-Wno-error=format' '-Wno-error=sign-compare');
+        cflags+=('-Wno-error=format' '-Wno-error=sign-compare' '-Wno-error=unused-command-line-argument');
     elif [ "$target" == 'libideviceactivation' ]; then
         export libxml2_CFLAGS="-I$SDK/usr/include/libxml2";
         export libxml2_LIBS="-lxml2";
