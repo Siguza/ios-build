@@ -22,6 +22,9 @@ targets=();
 if [ "$#" == 0 ]; then
     targets=('libplist' 'libusbmuxd' 'libimobiledevice' 'libirecovery' 'libcrippy-1' 'libpartialzip-1' 'libfragmentzip' 'idevicerestore' 'ideviceinstaller' 'libideviceactivation');
 else
+    cflags=('-mmacosx-version-min=10.10' '-O3' "-I$PREFIX/include");
+    cxxflags=('-mmacosx-version-min=10.10' '-O3' "-I$PREFIX/include");
+    ldflags=("-L$PREFIX/lib");
     x="$1";
     shift;
     case "$x" in
@@ -29,7 +32,7 @@ else
             dir="$PWD";
             mkdir -p "$PWD-build";
             cd "$PWD-build";
-            "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="-O3 -I$PREFIX/include" CXXFLAGS="-O3 -I$PREFIX/include" LDFLAGS="-L$PREFIX/lib";
+            "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --disable-assembly PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
             make;
             make install;
             cd "$dir";
@@ -38,7 +41,7 @@ else
             dir="$PWD";
             mkdir -p "$PWD-build";
             cd "$PWD-build";
-            "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --enable-x86-aesni PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="-O3 -I$PREFIX/include" CXXFLAGS="-O3 -I$PREFIX/include" LDFLAGS="-L$PREFIX/lib";
+            "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --enable-x86-aesni PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
             make;
             make install;
             cd "$dir";
@@ -47,7 +50,7 @@ else
             dir="$PWD";
             mkdir -p "$PWD-build";
             cd "$PWD-build";
-            "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --disable-nls --without-p11-kit --enable-openssl-compatibility PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="-O3 -I$PREFIX/include" CXXFLAGS="-O3 -I$PREFIX/include" LDFLAGS="-L$PREFIX/lib";
+            "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --disable-nls --without-p11-kit --enable-openssl-compatibility --with-included-unistring PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
             make;
             make install;
             cd "$dir";
@@ -56,7 +59,7 @@ else
             dir="$PWD";
             mkdir -p "$PWD-build";
             cd "$PWD-build";
-            "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --disable-nls PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="-O3 -I$PREFIX/include" CXXFLAGS="-O3 -I$PREFIX/include" LDFLAGS="-L$PREFIX/lib";
+            "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --disable-nls PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
             make;
             make install;
             cd "$dir";
@@ -65,7 +68,7 @@ else
             dir="$PWD";
             mkdir -p "$PWD-build";
             cd "$PWD-build";
-            "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="-O3 -I$PREFIX/include" CXXFLAGS="-O3 -I$PREFIX/include" LDFLAGS="-L$PREFIX/lib";
+            "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
             make;
             make install;
             cd "$dir";
@@ -118,8 +121,8 @@ for target in "${targets[@]}"; do
     mkdir "$target-build";
     cd "$target-build";
     flags=();
-    cflags=('-O3' "-I$PREFIX/include");
-    cxxflags=('-O3' "-I$PREFIX/include");
+    cflags=('-mmacosx-version-min=10.10' '-O3' "-I$PREFIX/include");
+    cxxflags=('-mmacosx-version-min=10.10' '-O3' "-I$PREFIX/include");
     ldflags=("-L$PREFIX/lib");
     if [ "$target" == 'libimobiledevice' ]; then
         flags+=('--disable-openssl');
