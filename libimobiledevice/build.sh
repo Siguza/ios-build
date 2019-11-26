@@ -20,7 +20,7 @@ fi;
 
 targets=();
 if [ "$#" == 0 ]; then
-    targets=('libplist' 'libusbmuxd' 'libimobiledevice' 'libirecovery' 'libcrippy-1' 'libpartialzip-1' 'libfragmentzip' 'idevicerestore' 'ideviceinstaller' 'libideviceactivation');
+    targets=('libplist' 'libusbmuxd' 'libimobiledevice' 'libirecovery' 'libcrippy-1' 'libpartialzip-1' 'libgeneral' 'libfragmentzip' 'idevicerestore' 'ideviceinstaller' 'libideviceactivation');
 else
     cflags=('-mmacosx-version-min=10.10' '-O3' "-I$PREFIX/include");
     cxxflags=('-mmacosx-version-min=10.10' '-O3' "-I$PREFIX/include");
@@ -89,6 +89,7 @@ urls=('https://github.com/libimobiledevice/libplist.git' \
       'https://github.com/libimobiledevice/libirecovery.git' \
       'https://github.com/Siguza/libcrippy-1.git' \
       'https://github.com/Siguza/libpartialzip-1.git' \
+      'https://github.com/tihmstar/libgeneral.git' \
       'https://github.com/tihmstar/libfragmentzip.git' \
       'https://github.com/libimobiledevice/idevicerestore.git' \
       'https://github.com/libimobiledevice/ideviceinstaller.git' \
@@ -106,7 +107,7 @@ for target in "${targets[@]}"; do
     cd "$target";
     git fetch --all;
     git reset --hard origin/master;
-    if [ "$target" == 'libfragmentzip' ]; then
+    if [ "$target" == 'libfragmentzip' ] || [ "$target" == 'libgeneral' ]; then
         "$LIBTOOLIZE" --force;
         aclocal -I 'm4';
         autoconf;
