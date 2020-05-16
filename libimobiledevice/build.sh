@@ -22,61 +22,46 @@ targets=();
 if [ "$#" == 0 ]; then
     targets=('libplist' 'libusbmuxd' 'libimobiledevice' 'libirecovery' 'libcrippy-1' 'libpartialzip-1' 'libgeneral' 'libfragmentzip' 'idevicerestore' 'ideviceinstaller' 'libideviceactivation');
 else
-    cflags=('-mmacosx-version-min=10.10' '-O3' "-I$PREFIX/include");
-    cxxflags=('-mmacosx-version-min=10.10' '-O3' "-I$PREFIX/include");
-    ldflags=("-L$PREFIX/lib");
-    x="$1";
-    shift;
-    case "$x" in
-        'gmp')
-            dir="$PWD";
-            mkdir -p "$PWD-build";
-            cd "$PWD-build";
-            "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --disable-assembly PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
-            make;
-            make install;
-            cd "$dir";
-            ;;
-        'nettle')
-            dir="$PWD";
-            mkdir -p "$PWD-build";
-            cd "$PWD-build";
-            "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --enable-x86-aesni PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
-            make;
-            make install;
-            cd "$dir";
-            ;;
-        'gnutls')
-            dir="$PWD";
-            mkdir -p "$PWD-build";
-            cd "$PWD-build";
-            "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --disable-nls --without-p11-kit --enable-openssl-compatibility --with-included-unistring PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
-            make;
-            make install;
-            cd "$dir";
-            ;;
-        'libgpg-error')
-            dir="$PWD";
-            mkdir -p "$PWD-build";
-            cd "$PWD-build";
-            "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --disable-nls PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
-            make;
-            make install;
-            cd "$dir";
-            ;;
-        'libtasn1'|'libgcrypt'|'libzip')
-            dir="$PWD";
-            mkdir -p "$PWD-build";
-            cd "$PWD-build";
-            "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
-            make;
-            make install;
-            cd "$dir";
-            ;;
-        *)
-            targets+=("$x");
-            ;;
-    esac
+    while [ "$#" -gt 0 ]; do
+        x="$1";
+        shift;
+        case "$x" in
+            'gmp'|'nettle'|'gnutls'|'libgpg-error'|'libtasn1'|'libgcrypt'|'libzip')
+                cflags=('-mmacosx-version-min=10.10' '-O3' "-I$PREFIX/include");
+                cxxflags=('-mmacosx-version-min=10.10' '-O3' "-I$PREFIX/include");
+                ldflags=('-flto' '-Wl,-dead_strip' "-L$PREFIX/lib");
+                dir="$(pwd)";
+                mkdir -p "$dir-build";
+                cd "$dir-build";
+                case "$x" in
+                    'gmp')
+                        "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --disable-assembly PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
+                        ;;
+                    'nettle')
+                        "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --enable-x86-aesni PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
+                        ;;
+                    'gnutls')
+                        "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --disable-nls --without-p11-kit --enable-openssl-compatibility --with-included-unistring PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
+                        ;;
+                    'libgpg-error')
+                        "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --disable-nls PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
+                        ;;
+                    'libtasn1'|'libgcrypt')
+                        "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
+                        ;;
+                    'libzip')
+                        PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}" cmake -DCMAKE_INSTALL_PREFIX:PATH="$PREFIX" -DBUILD_SHARED_LIBS:BOOL=OFF "$dir";
+                        ;;
+                esac;
+                make;
+                make install;
+                exit 0;
+                ;;
+            *)
+                targets+=("$x");
+                ;;
+        esac;
+    done;
 fi;
 
 if [ "${#targets[@]}" == 0 ]; then
@@ -105,6 +90,7 @@ done;
 cd "$(dirname "$0")";
 for target in "${targets[@]}"; do
     cd "$target";
+    git clean -xdf;
     git fetch --all;
     git reset --hard origin/master;
     if [ "$target" == 'libfragmentzip' ] || [ "$target" == 'libgeneral' ]; then
@@ -124,14 +110,18 @@ for target in "${targets[@]}"; do
     flags=();
     cflags=('-mmacosx-version-min=10.10' '-O3' "-I$PREFIX/include");
     cxxflags=('-mmacosx-version-min=10.10' '-O3' "-I$PREFIX/include");
-    ldflags=("-L$PREFIX/lib");
+    ldflags=('-flto' '-Wl,-dead_strip' "-L$PREFIX/lib");
     if [ "$target" == 'libimobiledevice' ]; then
         flags+=('--disable-openssl');
         ldflags+=('-lgpg-error');
     elif [ "$target" == 'idevicerestore' ]; then
-        cflags+=('-Dmutex_destroy=idr_mutex_destroy' '-Dthread_new=idr_thread_new' '-Dmutex_init=idr_mutex_init' '-Dthread_join=idr_thread_join' '-Dmutex_unlock=idr_mutex_unlock' '-Dmutex_lock=idr_mutex_lock' '-Dthread_alive=idr_thread_alive' '-Dthread_free=idr_thread_free' '-Dthread_once=idr_thread_once');
+        mkdir -p "__siguza/openssl";
+        ln -s "$SDK/usr/include/CommonCrypto/CommonCrypto.h" '__siguza/openssl/sha.h';
+        cflags+=("-I$(pwd)/__siguza" '-DCOMMON_DIGEST_FOR_OPENSSL=1' '-Dmutex_destroy=idr_mutex_destroy' '-Dthread_new=idr_thread_new' '-Dmutex_init=idr_mutex_init' '-Dthread_join=idr_thread_join' '-Dmutex_unlock=idr_mutex_unlock' '-Dmutex_lock=idr_mutex_lock' '-Dthread_alive=idr_thread_alive' '-Dthread_free=idr_thread_free' '-Dthread_once=idr_thread_once');
+        ldflags+=('-lbz2');
     elif [ "$target" == 'ideviceinstaller' ]; then
         cflags+=('-Wno-error=format' '-Wno-error=sign-compare' '-Wno-error=unused-command-line-argument');
+        ldflags+=('-lbz2');
     elif [ "$target" == 'libideviceactivation' ]; then
         export libxml2_CFLAGS="-I$SDK/usr/include/libxml2";
         export libxml2_LIBS="-lxml2";
