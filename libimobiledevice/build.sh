@@ -117,7 +117,7 @@ for target in "${targets[@]}"; do
     elif [ "$target" == 'idevicerestore' ]; then
         mkdir -p "__siguza/openssl";
         ln -s "$SDK/usr/include/CommonCrypto/CommonCrypto.h" '__siguza/openssl/sha.h';
-        cflags+=("-I$(pwd)/__siguza" '-DCOMMON_DIGEST_FOR_OPENSSL=1' '-Dmutex_destroy=idr_mutex_destroy' '-Dthread_new=idr_thread_new' '-Dmutex_init=idr_mutex_init' '-Dthread_join=idr_thread_join' '-Dmutex_unlock=idr_mutex_unlock' '-Dmutex_lock=idr_mutex_lock' '-Dthread_alive=idr_thread_alive' '-Dthread_free=idr_thread_free' '-Dthread_once=idr_thread_once');
+        cflags+=("-I$(pwd)/__siguza" '-DCOMMON_DIGEST_FOR_OPENSSL=1' '-Dmutex_destroy=idr_mutex_destroy' '-Dthread_new=idr_thread_new' '-Dmutex_init=idr_mutex_init' '-Dthread_join=idr_thread_join' '-Dmutex_unlock=idr_mutex_unlock' '-Dmutex_lock=idr_mutex_lock' '-Dthread_alive=idr_thread_alive' '-Dthread_free=idr_thread_free' '-Dthread_once=idr_thread_once' '-Dsocket_connect_unix=idr_socket_connect_unix' '-Dsocket_create_unix=idr_socket_create_unix' '-Dsocket_receive_timeout=idr_socket_receive_timeout' '-Dsocket_accept=idr_socket_accept' '-Dsocket_connect=idr_socket_connect' '-Dsocket_shutdown=idr_socket_shutdown' '-Dsocket_peek=idr_socket_peek' '-Dsocket_receive=idr_socket_receive' '-Dsocket_create=idr_socket_create' '-Dsocket_close=idr_socket_close' '-Dsocket_set_verbose=idr_socket_set_verbose' '-Dsocket_send=idr_socket_send' '-Dsocket_check_fd=idr_socket_check_fd');
         ldflags+=('-lbz2');
     elif [ "$target" == 'ideviceinstaller' ]; then
         cflags+=('-Wno-error=format' '-Wno-error=sign-compare' '-Wno-error=unused-command-line-argument');
