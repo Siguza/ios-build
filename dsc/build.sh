@@ -7,14 +7,19 @@ if [ $# -ne 1 ]; then
     exit 1;
 fi;
 
+std='c++17';
 base="$1";
-in="$base/launch-cache";
+if [ -e "$base/launch-cache" ]; then
+    in="$base/launch-cache";
+else
+    in="$base/dyld3/shared-cache";
+fi;
 out="$(dirname "$0")";
 
 if [ -z "$GXX" ]; then
     GXX=clang++;
 fi;
-GXXFLAGS=('-std=c++11' '-Wall' '-O3' '-flto' '-DSUPPORT_ARCH_arm64e=1' '-DSUPPORT_ARCH_arm64_32=1' '-D__API_AVAILABLE_PLATFORM_bridgeos(x)=watchos,introduced=x' '-D__API_UNAVAILABLE_PLATFORM_bridgeos=bridgeos,unavailable' "-I${out}/inc" "-I${in}" "-I${in}/../include" "-I${in}/../dyld3" "-I${in}/../dyld3/shared-cache" "-I${in}/../interlinked-dylibs");
+GXXFLAGS=("-std=${std}" '-Wall' '-O3' '-flto' '-DSUPPORT_ARCH_arm64e=1' '-DSUPPORT_ARCH_arm64_32=1' '-D__API_AVAILABLE_PLATFORM_bridgeos(x)=watchos,introduced=x' '-D__API_UNAVAILABLE_PLATFORM_bridgeos=bridgeos,unavailable' "-I${out}/inc" "-I${in}" "-I${base}/include" "-I${base}/dyld3" "-I${base}/dyld3/shared-cache" "-I${base}/interlinked-dylibs");
 
 printf "\x1b[1;95m===== dsc_extractor =====\x1b[0m\n";
 
@@ -32,8 +37,16 @@ if ! "$found"; then
     echo 'Failed to find dsc_extractor block code';
     exit 1;
 fi;
+files=();
+for f in 'Diagnostics.cpp' 'MachOFile.cpp' 'shared-cache/DyldSharedCache.cpp'; do
+    file="${base}/dyld3/$f";
+    if [ -e "$file" ]; then
+        files+=("$file");
+    fi;
+done;
 
-"$GXX" "${GXXFLAGS[@]}" -Wl,-interposable -o "$out/dsc_extractor" "$in/dsc_iterator.cpp" -xobjective-c++ <(cat <<EOF
+echo "$GXX" "${GXXFLAGS[@]}" -Wl,-interposable -o "$out/dsc_extractor" "$in/dsc_iterator.cpp" "${files[@]}" -xobjective-c++ ...;
+"$GXX" "${GXXFLAGS[@]}" -Wl,-interposable -o "$out/dsc_extractor" "$in/dsc_iterator.cpp" "${files[@]}" -xobjective-c++ <(cat <<EOF
 ${data}
 
 #include <stdio.h>
@@ -61,7 +74,7 @@ EOF
 printf "\x1b[1;95m===== dsc_util =====\x1b[0m\n";
 
 found=false;
-data='';
+data='extern "C" int dyld_shared_cache_extract_dylibs(const char*, const char*);';
 while read -r; do
     data+="$REPLY"$'\n';
     if egrep -q '^\s*else if \( options\.mode == modeExtract \) \{$' <<<"$REPLY"; then
@@ -74,24 +87,26 @@ if ! "$found"; then
     exit 1;
 fi;
 files=();
-for f in 'Diagnostics.cpp' 'MachOFile.cpp' 'MachOLoaded.cpp' "shared-cache/DyldSharedCache.cpp"; do
-    f="${in}/../dyld3/$f";
-    if [ -e "$f" ]; then
-        files+=("$f");
+for f in 'Closure.cpp' 'ClosureFileSystemPhysical.cpp' 'Diagnostics.cpp' 'MachOAnalyzer.cpp' 'MachOFile.cpp' 'MachOLoaded.cpp' 'shared-cache/DyldSharedCache.cpp'; do
+    file="${base}/dyld3/$f";
+    if [ -e "$file" ]; then
+        files+=("$file");
     fi;
 done;
+echo "$GXX" "${GXXFLAGS[@]}" -o "$out/dsc_util" "$in/dsc_extractor.cpp" "$in/dsc_iterator.cpp" "${files[@]}" -xobjective-c++ ...;
 "$GXX" "${GXXFLAGS[@]}" -o "$out/dsc_util" "$in/dsc_extractor.cpp" "$in/dsc_iterator.cpp" "${files[@]}" -xobjective-c++ <(echo "$data");
 
 if [ -e "$base/dyld3/shared-cache/dyld_closure_util.cpp" ]; then
     printf "\x1b[1;95m===== dsc_closure =====\x1b[0m\n";
 
     files=();
-    for f in 'Closure.cpp' 'ClosureBuffer.cpp' 'ClosureBuilder.cpp' 'ClosureFileSystemPhysical.cpp' 'ClosurePrinter.cpp' 'ClosureWriter.cpp' 'Diagnostics.cpp' 'DyldCacheParser.cpp' 'LaunchCacheReader.cpp' 'LaunchCachePrinter.cpp' 'LaunchCacheWriter.cpp' 'MachOAnalyzer.cpp' 'MachOFile.cpp' 'MachOLoaded.cpp' 'MachOParser.cpp' 'PathOverrides.cpp' 'shared-cache/DyldSharedCache.cpp' 'shared-cache/FileUtils.cpp' 'shared-cache/ImageProxy.cpp'; do
-        f="${base}/dyld3/$f";
-        if [ -e "$f" ]; then
-            files+=("$f");
+    for f in 'Closure.cpp' 'ClosureBuffer.cpp' 'ClosureBuilder.cpp' 'ClosureFileSystemPhysical.cpp' 'ClosurePrinter.cpp' 'ClosureWriter.cpp' 'Diagnostics.cpp' 'DyldCacheParser.cpp' 'LaunchCacheReader.cpp' 'LaunchCachePrinter.cpp' 'LaunchCacheWriter.cpp' 'MachOAnalyzer.cpp' 'MachOAnalyzerSet.cpp' 'MachOFile.cpp' 'MachOLoaded.cpp' 'MachOParser.cpp' 'PathOverrides.cpp' 'RootsChecker.cpp' 'shared-cache/DyldSharedCache.cpp' 'shared-cache/FileUtils.cpp' 'shared-cache/ImageProxy.cpp'; do
+        file="${base}/dyld3/$f";
+        if [ -e "$file" ]; then
+            files+=("$file");
         fi;
     done;
+    echo "$GXX" "${GXXFLAGS[@]}" -o "$out/dsc_closure" "$base/dyld3/shared-cache/dyld_closure_util.cpp" "${files[@]}";
     "$GXX" "${GXXFLAGS[@]}" -o "$out/dsc_closure" "$base/dyld3/shared-cache/dyld_closure_util.cpp" "${files[@]}";
 fi;
 

@@ -4,16 +4,19 @@
 #include <stdarg.h>
 
 #ifdef __cplusplus
-#define UGH_EXT extern "C"
-#else
-#define UGH_EXT
+extern "C" {
 #endif
 
 typedef void* _SIMPLE_STRING;
 
-UGH_EXT void* _simple_salloc(void);
-UGH_EXT void  _simple_sfree(void*);
-UGH_EXT int   _simple_vsprintf(void*, const char*, va_list);
-UGH_EXT char* _simple_string(void*);
+void*       _simple_salloc(void);
+void        _simple_sfree(void*);
+int         _simple_vsprintf(void*, const char*, va_list);
+char*       _simple_string(void*);
+const char* _simple_getenv(const char*[], const char*);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

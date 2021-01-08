@@ -21,6 +21,7 @@ extern "C"
 {
 #endif
     extern int csr_check(uint32_t mask);
+    extern int rootless_check_trusted_class(const char*, const char*);
 #ifdef __cplusplus
 }
 #endif
