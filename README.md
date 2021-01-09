@@ -1,4 +1,4 @@
 # ios-build
 
-A dumpyard for build files that have something to do with iOS.  
+A dump-yard for build files that are in some way related to iOS.  
 See individual folders for details.

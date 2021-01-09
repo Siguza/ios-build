@@ -8,17 +8,33 @@ Builds are static, which makes for big binaries, but ones that can be shared wit
 
 |Var|Meaning|Default|
 |:-|:-|:-|
-|`PREFIX`|Where to install|`$HOME/local/dist`|
+|`PREFIX`|Where to install|`$HOME/Developer/local/dist` for arm64<br>`$HOME/local/dist` for x86_64|
 |`SDK`|Where system headers are|`/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk`|
-|`LIBTOOLIZE`|Name or path of GNU libtoolize|`glibtoolize`|
+|`USE_LIBRESSL`|Whether or not to use the system-provided libressl|`true` for arm64<br>`false` for x86_64|
 
 ### Building dependencies
 
-Before building libimobiledevice projects themselves, you need the following dependencies. Sorry, my script currently can't fetch the latest version by itself, maybe one day. What it **can** do though is build them.
+Before building the LIMD stack itself, you'll need some dependencies.  
+Until I figure out a way to always pull the latest version of those, you'll have to download the tarballs yourself, sorry.
 
-For each dependency, download the latest tarball from the linked website, extract it, `cd` into the directory, then invoke the build script with the argument from the first column:
+Once you have those though, you can use my script to build them. Just `cd` into the source folder and call `build.sh` with the project name. For example:
 
-|Build arg|Download page|
+    cd libzip
+    ../build.sh libzip
+
+The actual list of dependencies depends on `USE_LIBRESSL`.  
+On x86_64, binaries are built with macOS 10.9 compatibility, so for compatibility, a static GnuTLS stack is used.  
+On arm64, GnuTLS cannot be used since libnettle does not support that architecture. But since compatibility only goes back to macOS 11.0, using the system-provided libraries is preferred here.
+
+**arm64 dependencies (or `USE_LIBRESSL=true`)**
+
+|`build.sh` arg|Download page|
+|:-:|:-|
+|`libzip`|https://libzip.org/download/|
+
+**x86_64 dependencies (or `USE_LIBRESSL=false`)**
+
+|`build.sh` arg|Download page|
 |:-:|:-|
 |`gmp`|https://gmplib.org/download/gmp/|
 |`nettle`|https://ftp.gnu.org/gnu/nettle/|
@@ -36,9 +52,6 @@ Once you've installed the dependencies in `PREFIX`, you can run the build script
 - `libusbmuxd`
 - `libimobiledevice`
 - `libirecovery`
-- `libcrippy-1`
-- `libpartialzip-1`
-- `libfragmentzip`
 - `idevicerestore`
 - `ideviceinstaller`
 - `libideviceactivation`
