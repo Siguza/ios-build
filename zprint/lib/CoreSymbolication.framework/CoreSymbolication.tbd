@@ -1,0 +1,10 @@
+--- !tapi-tbd
+tbd-version:     4
+targets:         [ arm64-ios, arm64e-ios ]
+install-name:    '/System/Library/PrivateFrameworks/CoreSymbolication.framework/CoreSymbolication'
+exports:
+  - targets:         [ arm64-ios, arm64e-ios ]
+    symbols:         [ _CSSymbolicatorCreateWithMachKernel, _CSSymbolicatorGetSymbolWithAddressAtTime,
+                       _CSSymbolicatorGetSourceInfoWithAddressAtTime, _CSSymbolGetName,
+                       _CSSourceInfoGetPath, _CSSourceInfoGetLineNumber ]
+...
