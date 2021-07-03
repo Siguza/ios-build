@@ -25,3 +25,5 @@ Verified to compile with:
 - dyld-750.5
 - dyld-750.6
 - dyld-832.7.1
+- dyld-832.7.3
+- dyld-851.27
