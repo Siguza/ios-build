@@ -39,7 +39,8 @@ fi;
 
 urls=('https://github.com/tihmstar/libgeneral.git' \
       'https://github.com/tihmstar/libfragmentzip.git' \
-      'https://github.com/tihmstar/tsschecker.git');
+      'https://github.com/1Conan/tsschecker.git');
+#      'https://github.com/tihmstar/tsschecker.git');
 for x in "${urls[@]}"; do
     dir="$(basename "$x")";
     dir="${dir:0:${#dir}-4}";
