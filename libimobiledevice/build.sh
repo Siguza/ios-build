@@ -28,7 +28,7 @@ if [ -z "$PREFIX" ]; then
     fi;
 fi;
 
-if [ -z "$BUILD_SHARED" ] then
+if [ -z "$BUILD_SHARED" ]; then
     BUILD_SHARED=false;
 fi;
 
