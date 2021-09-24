@@ -28,6 +28,18 @@ if [ -z "$PREFIX" ]; then
     fi;
 fi;
 
+if [ -z "$BUILD_SHARED" ] then
+    BUILD_SHARED=false;
+fi;
+
+if $BUILD_SHARED; then
+    gflags=('--enable-shared' '--disable-static');
+    gcmflags=('-DBUILD_SHARED_LIBS:BOOL=ON');
+else
+    gflags=('--enable-static' '--disable-shared');
+    gcmflags=('-DBUILD_SHARED_LIBS:BOOL=OFF');
+fi;
+
 if [ -z "$SDK" ]; then
     export SDK='/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk';
 fi;
@@ -49,22 +61,22 @@ else
                 cd "$dir-build";
                 case "$x" in
                     'gmp')
-                        "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --disable-assembly PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
+                        "$dir/configure" --prefix="$PREFIX" "${gflags[@]}" --disable-assembly PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
                         ;;
                     'nettle')
-                        "$dir/configure" --prefix="$PREFIX" --build=aarch64-apple-darwin20.1.0 --host=aarch64-apple-darwin20.1.0 --enable-static --disable-shared --enable-x86-aesni PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
+                        "$dir/configure" --prefix="$PREFIX" "${gflags[@]}" --build=aarch64-apple-darwin20.1.0 --host=aarch64-apple-darwin20.1.0 --enable-x86-aesni PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
                         ;;
                     'gnutls')
-                        "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --disable-nls --without-p11-kit --enable-openssl-compatibility --with-included-unistring PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
+                        "$dir/configure" --prefix="$PREFIX" "${gflags[@]}" --disable-nls --without-p11-kit --enable-openssl-compatibility --with-included-unistring PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
                         ;;
                     'libgpg-error')
-                        "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared --disable-nls PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
+                        "$dir/configure" --prefix="$PREFIX" "${gflags[@]}" --disable-nls PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
                         ;;
                     'libtasn1'|'libgcrypt')
-                        "$dir/configure" --prefix="$PREFIX" --enable-static --disable-shared PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
+                        "$dir/configure" --prefix="$PREFIX" "${gflags[@]}" PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
                         ;;
                     'libzip')
-                        PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}" cmake -DCMAKE_INSTALL_PREFIX:PATH="$PREFIX" -DBUILD_SHARED_LIBS:BOOL=OFF "$dir";
+                        PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}" cmake -DCMAKE_INSTALL_PREFIX:PATH="$PREFIX" "${gcmflags[@]}" "$dir";
                         ;;
                 esac;
                 make;
@@ -143,7 +155,7 @@ for target in "${targets[@]}"; do
         export libcurl_CFLAGS="-I$SDK/usr/include";
         export libcurl_LIBS='-lcurl';
     fi;
-    "${PWD:0:${#PWD}-6}/configure" --prefix="$PREFIX" --enable-static --disable-shared "${flags[@]}" PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
+    "${PWD:0:${#PWD}-6}/configure" --prefix="$PREFIX" "${gflags[@]}" "${flags[@]}" PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" CFLAGS="${cflags[*]}" CXXFLAGS="${cxxflags[*]}" LDFLAGS="${ldflags[*]}";
     make -j16;
     make install;
     if [ "$target" = 'libimobiledevice' ] && $USE_LIBRESSL; then

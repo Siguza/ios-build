@@ -11,6 +11,7 @@ Builds are static, which makes for big binaries, but ones that can be shared wit
 |`PREFIX`|Where to install|`$HOME/Developer/local/dist` for arm64<br>`$HOME/local/dist` for x86_64|
 |`SDK`|Where system headers are|`/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk`|
 |`USE_LIBRESSL`|Whether or not to use the system-provided libressl|`true` for arm64<br>`false` for x86_64|
+|`BUILD_SHARED`|Link shared instead of statically|`false`|
 
 ### Building dependencies
 
