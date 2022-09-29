@@ -134,7 +134,7 @@ for target in "${targets[@]}"; do
     elif [ "$target" = 'libimobiledevice' ]; then
         flags+=('--without-cython');
         if ! $USE_LIBRESSL; then
-            flags+=('--disable-openssl');
+            flags+=('--without-openssl' '--with-gnutls');
             ldflags+=('-lgpg-error');
         fi;
     elif [ "$target" = 'idevicerestore' ]; then
@@ -146,6 +146,10 @@ for target in "${targets[@]}"; do
         export libcurl_LIBS='-lcurl';
         export zlib_CFLAGS="-I$SDK/usr/include";
         export zlib_LIBS='-lz';
+        if ! $USE_LIBRESSL; then
+            flags+=('--without-openssl' '--with-gnutls');
+            ldflags+=('-lgpg-error');
+        fi;
     elif [ "$target" = 'ideviceinstaller' ]; then
         cflags+=('-Wno-error=format' '-Wno-error=sign-compare' '-Wno-error=unused-command-line-argument');
         ldflags+=('-lbz2 -lz');
